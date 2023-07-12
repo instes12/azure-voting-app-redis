@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -12,17 +13,17 @@ spec:
       labels:
         app: azure-vote-back
     spec:
-      nodeSelector:
-        "beta.kubernetes.io/os": linux
       containers:
-      - name: azure-vote-back
-        image: mcr.microsoft.com/oss/bitnami/redis:6.0.8
-        env:
+      - env:
         - name: ALLOW_EMPTY_PASSWORD
           value: "yes"
+        image: mcr.microsoft.com/oss/bitnami/redis:6.0.8
+        name: azure-vote-back
         ports:
         - containerPort: 6379
           name: redis
+      nodeSelector:
+        beta.kubernetes.io/os: linux
 ---
 apiVersion: v1
 kind: Service
@@ -39,6 +40,7 @@ kind: Deployment
 metadata:
   name: azure-vote-front
 spec:
+  minReadySeconds: 5
   replicas: 1
   selector:
     matchLabels:
@@ -47,35 +49,34 @@ spec:
     rollingUpdate:
       maxSurge: 1
       maxUnavailable: 1
-  minReadySeconds: 5 
   template:
     metadata:
       labels:
         app: azure-vote-front
     spec:
-      nodeSelector:
-        "beta.kubernetes.io/os": linux
       containers:
-      - name: azure-vote-front
+      - env:
+        - name: REDIS
+          value: azure-vote-back
         image: aks3321.azurecr.io/azure-vote-front:v1
+        name: azure-vote-front
         ports:
         - containerPort: 80
         resources:
-          requests:
-            cpu: 250m
           limits:
             cpu: 500m
-        env:
-        - name: REDIS
-          value: "azure-vote-back"
+          requests:
+            cpu: 250m
+      nodeSelector:
+        beta.kubernetes.io/os: linux
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: azure-vote-front
 spec:
-  type: LoadBalancer
   ports:
   - port: 80
   selector:
     app: azure-vote-front
+  type: LoadBalancer
