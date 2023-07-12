@@ -61,7 +61,7 @@ spec:
       - env:
         - name: REDIS
           value: azure-vote-back
-        image: aks3321.azurecr.io/azure-vote-front:v1
+        image:
         name: azure-vote-front
         ports:
         - containerPort: 80
